@@ -379,12 +379,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_path', type=str, default='tiny_shakespeare.txt', help='path to Tiny Shakespeare text')
     parser.add_argument('--seq_len', type=int, default=128)
-    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--d_model', type=int, default=256)
     parser.add_argument('--d_ff', type=int, default=1024)
     parser.add_argument('--n_layers', type=int, default=2)
     parser.add_argument('--n_heads', type=int, default=4)
-    parser.add_argument('--epochs', type=int, default=10)
+    parser.add_argument('--epochs', type=int, default=5)
     parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--ffn_type', type=str, default='kan', choices=['ff', 'kan'], help='which feed-forward to use')
     parser.add_argument('--kan_m', type=int, default=64, help='number of scalar channels for KAN')
@@ -397,15 +397,34 @@ def main():
         raise FileNotFoundError(
             f"Please place tiny_shakespeare.txt at {args.data_path}. You can download the original file from public sources.")
     with open(args.data_path, 'r', encoding='utf-8') as f:
-        text = f.read()
+        lines = f.readlines()
 
-    tokenizer = CharTokenizer(text)
-    data = tokenizer.encode(text)
+    n = len(lines)
+    train_end = int(0.8 * n)
+    val_end = int(0.85 * n)  # 5% after train
 
-    # split into train/val
-    split = int(0.9 * len(data))
-    train_data = data[:split]
-    val_data = data[split:]
+    train_lines = lines[:train_end]
+    val_lines = lines[train_end:val_end]
+    test_lines = lines[val_end:]
+
+    # keep copies for later evaluation script
+    with open("train_lines.txt", "w", encoding="utf-8") as f:
+        f.writelines(train_lines)
+    with open("val_lines.txt", "w", encoding="utf-8") as f:
+        f.writelines(val_lines)
+    with open("test_lines.txt", "w", encoding="utf-8") as f:
+        f.writelines(test_lines)
+
+    # join back into text for tokenizer
+    train_text = "".join(train_lines)
+    val_text = "".join(val_lines)
+    test_text = "".join(test_lines)
+
+    # tokenizer vocab built on full corpus
+    tokenizer = CharTokenizer(train_text + val_text + test_text)
+    train_data = tokenizer.encode(train_text)
+    val_data = tokenizer.encode(val_text)
+    test_data = tokenizer.encode(test_text)
 
     train_ds = TinyShakespeareDataset(train_data, args.seq_len)
     val_ds = TinyShakespeareDataset(val_data, args.seq_len)
