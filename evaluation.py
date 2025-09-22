@@ -2,22 +2,39 @@ import torch
 import torch.nn as nn
 import math
 import argparse
+import json
 from transformer_kan import TransformerKAN, CharTokenizer
 
-def evaluate_model(checkpoint_path, test_file, device="cuda"):
+def load_tokenizer(vocab_file, full_text):
+    if vocab_file:
+        with open(vocab_file, "r", encoding="utf-8") as f:
+            vocab_dict = json.load(f)
+        tokenizer = CharTokenizer(full_text)
+        tokenizer.stoi = vocab_dict["stoi"]
+        tokenizer.itos = vocab_dict["itos"]
+        tokenizer.vocab_size = len(tokenizer.stoi)
+    else:
+        tokenizer = CharTokenizer(full_text)
+    return tokenizer
+
+def evaluate_model(checkpoint_path, data_path, device="cuda", vocab_file=None):
     # Load checkpoint
     checkpoint = torch.load(checkpoint_path, map_location=device)
-    model_args = checkpoint["args"]  # saved as dict in training script
+    model_args = checkpoint["args"]
 
-    # Load test data
-    with open(test_file, "r", encoding="utf-8") as f:
-        test_text = f.read()
+    # Load dataset
+    with open(data_path, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+    n = len(lines)
+    test_lines = lines[int(0.85 * n):]  # last 15% of lines
+    test_text = "".join(test_lines)
 
-    # Tokenizer must match training vocab (train/val/test combined)
-    # For proper reproduction, you might want to save tokenizer during training.
-    # Here we rebuild it from the entire test file, which is acceptable if
-    # vocab is consistent.
-    tokenizer = CharTokenizer(test_text)
+    # Tokenizer (rebuild or reload from saved file)
+    with open(data_path, "r", encoding="utf-8") as f:
+        full_text = f.read()
+
+    tokenizer = load_tokenizer(vocab_file, full_text)
+
     test_ids = torch.tensor(tokenizer.encode(test_text), dtype=torch.long)
 
     # Batchify test set
@@ -54,7 +71,7 @@ def evaluate_model(checkpoint_path, test_file, device="cuda"):
     with torch.no_grad():
         for i in range(0, test_data.size(1) - seq_len, seq_len):
             x, y = get_batch(i)
-            logits = model(x, x)  # tgt_in = x (like in training)
+            logits = model(x, x)
             loss = criterion(logits.view(-1, logits.size(-1)), y.reshape(-1))
             total_loss += loss.item() * y.numel()
             total_tokens += y.numel()
@@ -72,8 +89,9 @@ def evaluate_model(checkpoint_path, test_file, device="cuda"):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint", type=str, default="checkpoints/best_ckpt.pt")
-    parser.add_argument("--test_file", type=str, default="test_lines.txt")
+    parser.add_argument("--data_path", type=str, default="tiny_shakespeare.txt")
+    parser.add_argument("--vocab_file", type=str, default=None, help="Optional path to saved tokenizer vocab")
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
     args = parser.parse_args()
 
-    evaluate_model(args.checkpoint, args.test_file, args.device)
+    evaluate_model(args.checkpoint, args.data_path, args.device, args.vocab_file)
