@@ -126,12 +126,19 @@ class FeedForward(nn.Module):
 class KANFeedForward(nn.Module):
     def __init__(self, d_model, d_ff, dropout=0.1, grid=3, k=3, seed=1, device=None):
         super().__init__()
-        # width defines the layer sizes: [input_dim, hidden_dim, output_dim]
-        self.kan = KAN(width=[d_model, d_ff, d_model], grid=grid, k=k, seed=seed, device=device)
+        self.d_model = d_model
+        self.kan = KAN(width=[d_model, d_ff, d_model],
+                       grid=grid, k=k, seed=seed, device=device)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
-        return self.dropout(self.kan(x))
+        # x: (B, T, D)
+        B, T, D = x.shape
+        x = x.reshape(B*T, D)   # flatten sequence
+        x = self.kan(x)         # apply KAN
+        x = x.reshape(B, T, D)  # restore shape
+        return self.dropout(x)
+
 
 
 # ------------------------------
