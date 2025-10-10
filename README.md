@@ -24,37 +24,51 @@ Here:
 
 ---
 
-### 2. FFN vs. KAN: Mathematical Contrast
+## 2. FFN vs. KAN: Mathematical Contrast
 
-#### Conventional Feed-Forward Layer (MLP)
-The MLP-based Feed-Forward Network within a Transformer block performs:
-\[
-\text{FFN}(x) = \sigma(xW_1 + b_1)W_2 + b_2
-\]
+### Conventional Feed-Forward Layer (MLP)
+
+The MLP-based Feed-Forward Network within a Transformer block performs the familiar two-layer mapping:
+
+$$
+\mathrm{FFN}(x) \;=\; \sigma\big(x W_1 + b_1\big)\, W_2 + b_2
+$$
 
 where:
-- \( x \in \mathbb{R}^{d} \) is the input vector,  
-- \( W_1, W_2 \) are learnable weight matrices,  
-- \( b_1, b_2 \) are biases, and  
-- \( \sigma(\cdot) \) is a nonlinear activation such as ReLU or GELU.  
+- \(x \in \mathbb{R}^{d}\) is the input vector,  
+- \(W_1 \in \mathbb{R}^{d \times d_{ff}},\, W_2 \in \mathbb{R}^{d_{ff} \times d}\) are learnable weight matrices,  
+- \(b_1 \in \mathbb{R}^{d_{ff}},\, b_2 \in \mathbb{R}^d\) are biases, and  
+- \(\sigma(\cdot)\) is a nonlinear activation such as ReLU or GELU.
 
-This operation applies **linear transformations followed by nonlinearities** — a *composition* of functions.
+This operation applies **linear transformations followed by nonlinearities** — i.e. a *composition* of functions.
 
 ---
 
-#### Kolmogorov–Arnold Network (KAN) Feed-Forward Layer
-By contrast, the **KAN-based layer** models each connection between nodes as a **learnable univariate spline function**, forming a *superposition* of additive univariate mappings:
+### Kolmogorov–Arnold Network (KAN) Feed-Forward Layer
 
-\[
-\text{KAN}(x) = \sum_{i=1}^{m} \phi_i \left( \sum_{j=1}^{d} \psi_{ij}(x_j) \right)
-\]
+By contrast, a KAN-based layer uses the Kolmogorov–Arnold superposition principle and models the mapping as a sum of univariate function compositions:
+
+$$
+\mathrm{KAN}(x) \;=\; \sum_{i=1}^{m} \phi_i\!\left(\sum_{j=1}^{d} \psi_{ij}(x_j)\right)
+$$
 
 where:
-- \( \psi_{ij}(\cdot) \) are inner spline functions acting on individual input coordinates,  
-- \( \phi_i(\cdot) \) are outer spline functions combining these contributions,  
-- \( m \) is the number of functional aggregations.  
+- \(\psi_{ij}(\cdot)\) are **inner univariate functions** (e.g., learned splines) applied to each input coordinate \(x_j\),  
+- \(\phi_i(\cdot)\) are **outer univariate functions** that combine the inner results,  
+- \(m\) is the number of aggregated terms (controls expressivity).
 
-Thus, **each connection encodes a continuous, piecewise polynomial relationship** instead of a static weight — giving the model smoother and more interpretable transformations.
+Thus each connection is modeled as a **continuous, piecewise-polynomial (spline) mapping** rather than a fixed scalar weight; the layer is an explicit *superposition* of simpler univariate components.
+
+---
+
+### Quick summary
+
+| Aspect | MLP (FFN) | KAN |
+|---|---:|:---|
+| Core operation | \( \sigma(xW_1+b_1)W_2 + b_2 \) | \( \sum_i \phi_i(\sum_j \psi_{ij}(x_j)) \) |
+| Parameterization | Dense matrices + activations | Univariate functions (splines) + additive aggregation |
+| Smoothness control | Implicit (via activations) | Explicit (spline degree / knots) |
+| Interpretability | Lower | Higher (functional form per connection) |
 
 ---
 
