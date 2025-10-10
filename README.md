@@ -128,3 +128,7 @@ Evaluation uses the final 15% of the dataset, computing:
 | Transformer-KAN | *0.0233* | *1.0236* | *99.38%* |
 
 ---
+
+## Future Updates
+
+To replace the final 2 fully connected layers in AlexNet architecture with KAN's and compare results between conventional and AlexNet KAN.
