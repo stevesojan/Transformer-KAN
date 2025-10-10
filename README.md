@@ -87,3 +87,40 @@ Thus each connection is modeled as a **continuous, piecewise-polynomial (spline)
 
 The modified architecture maintains the **Transformer encoder–decoder structure**, but with its feed-forward sublayers swapped out:
 
+
+
+## 📚 Dataset
+
+We use the [Tiny Shakespeare dataset](https://github.com/karpathy/char-rnn/blob/master/data/tinyshakespeare/input.txt), containing roughly 40,000 lines of Shakespeare’s text.
+
+The data is split as:
+- **80%** for training  
+- **5%** for validation  
+- **15%** for testing  
+
+Training and evaluation are character-level, where the model learns to predict the next token given a sequence of preceding tokens.
+
+---
+
+## 🧩 Implementation
+
+Two model variants are trained and compared:
+1. **Baseline Transformer** – conventional MLP feed-forward layers.  
+2. **Transformer-KAN** – KAN-based feed-forward layers.
+
+The model automatically saves the best checkpoint (based on lowest validation loss) during training.  
+Evaluation uses the final 15% of the dataset, computing:
+- **Loss**
+- **Perplexity**
+- **Accuracy**
+
+---
+
+## 🧪 Results
+
+| Model | Validation Loss ↓ | Test Perplexity ↓ | Accuracy ↑ |
+|:-------|:------------------|:------------------|:-------------|
+| Transformer (MLP) | *to be filled* | *to be filled* | *to be filled* |
+| Transformer-KAN | *to be filled* | *to be filled* | *to be filled* |
+
+---
