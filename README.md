@@ -104,6 +104,10 @@ Training and evaluation are character-level, where the model learns to predict t
 
 ## 🧩 Implementation
 
+Both implementations of the models were trained on 5 epochs. Training time:
+Conventional Tranformer with FFNN ~ 2-2.5 hours
+Transformer with KAN Layer ~ 5 hours
+
 Two model variants are trained and compared:
 1. **Baseline Transformer** – conventional MLP feed-forward layers.  
 2. **Transformer-KAN** – KAN-based feed-forward layers.
@@ -118,9 +122,9 @@ Evaluation uses the final 15% of the dataset, computing:
 
 ## 🧪 Results
 
-| Model | Validation Loss ↓ | Test Perplexity ↓ | Accuracy ↑ |
+| Model | Test Loss ↓ | Test Perplexity ↓ | Accuracy ↑ |
 |:-------|:------------------|:------------------|:-------------|
-| Transformer (MLP) | *to be filled* | *to be filled* | *to be filled* |
-| Transformer-KAN | *to be filled* | *to be filled* | *to be filled* |
+| Transformer (MLP) | *0.0311* | *1.0316* | *99.16%* |
+| Transformer-KAN | *0.0233* | *1.0236* | *99.38%* |
 
 ---
